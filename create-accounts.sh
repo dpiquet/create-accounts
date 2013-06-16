@@ -11,6 +11,7 @@
 #  Add users listed in users.lst and add public key in from <login>.pub in .ssh directory
 #
 
+# Default values
 loginShell="/bin/bash"
 
 passwdFile='/etc/passwd'
@@ -28,34 +29,34 @@ ret_ok=0
 # check required files exists
 if [ ! -f $passwdFile ]; then	
     echo "ERROR, $passwdFile does not exists ! Aborting..."
-    exit 1;
+    exit $ret_err;
 fi
 
 if [ ! -f $shadowFile ]; then
     echo "ERROR, $shadowFile does not exists ! Aborting..."
-    exit 1;
+    exit $ret_err;
 fi
 
 if [ ! -f $groupFile ]; then
     echo "ERROR, $groupFile does not exists ! Aborting..."
-    exit 1;
+    exit $ret_err;
 fi
 
 if [ ! -f $membersFile ]; then
     echo "ERROR, $membersFile does not exists ! Aborting..."
-    exit 1;
+    exit $ret_err;
 fi
 
 if [ ! -d $homePath ]; then
     echo "ERROR, directory $homePath does not exists ! Aborting..."
-    exit 1;
+    exit $ret_err;
 fi
 
 function create_account() {
 
     if [ $# -ne 1 ]; then
         echo "ERROR in create_account function usage !"
-	return 1;
+	return $ret_err;
     fi
 
     userCreated=1
@@ -71,7 +72,7 @@ function create_account() {
     grep $userName $passwdFile
     if [ $? -eq 0 ]; then
 	echo "ERROR, user $userName already exists !!! Skipping..."
-	return 1;
+	return $ret_err;
     fi
 
     # /etc/passwd entry
@@ -117,19 +118,19 @@ function create_account() {
     mkdir $homePath/$userName
     if [ $? -ne 0 ]; then
 	echo "ERROR, Could not create $userName home directory !"
-	return 1;
+	return $ret_err;
     fi
 
     mkdir $homePath/$userName/.ssh
     if [ $? -ne 0 ]; then
 	echo "ERROR, Could not create $userName .ssh directory !"
-	return 1;
+	return $ret_err;
     fi
 
     cat ./$userName.pub > $homePath/$userName/.ssh/authorized_keys
     if [ $? -ne 0 ]; then
 	echo "ERROR, Could not create authorized_ key file for $userName !"
-	return 1;
+	return $ret_err;
     fi
 
     chmod 600 $homePath/$userName/.ssh/authorized_keys
@@ -148,9 +149,80 @@ function create_account() {
     fi
 
     echo "$userName added to system"
-    return 0
-
+    return $ret_ok
 }
+
+function get_arguments() {
+    retVal=0
+
+    while test $# -gt 0; do
+        case "$1" in
+	    -h|--home)
+                shift
+                homePath=$1
+                shift
+		;;
+	    -s|--shadow-file)
+		shift
+                shadowFile=$1
+		shift
+		;;
+	    -g|--group-file)
+                shift
+                groupFile=$1
+		shift
+		;;
+	    -l|--login-shell)
+		shift
+                loginShell=$1
+		shift
+		;;
+	    -p|--passwd-file)
+                shift
+                passwdFile=$1
+		shift
+		;;
+            -f|--user-file)
+                shift
+                membersFile=$1
+                shift
+                ;;
+            -u|--uid)
+                shift
+                userID=$1
+                shift
+                ;;
+            -g|--gid)
+                shift
+                groupID=$1
+                shift
+                ;;
+	    *)
+                show_usage
+                retVal=$invalid_arg
+		break
+		;;
+        esac
+    done
+
+    return $retVal
+}
+
+function show_usage() {
+    echo "Usage: ./$0 [-h --home /home] [-s --shadow-file /etc/shadow]"
+    echo "[-g --group-file /etc/group] [-l --login-shell /bin/bash]"
+    echo "[-p --passwd-file /etc/passwd] [-f --user-file users.lst]"
+    echo "[-u --uid 1000] [-g --gid 1000]"
+
+    return $ret_ok
+}
+
+# Here starts the script execution
+
+get_arguments
+if [ $? -ne $ret_ok ]; then
+    exit $?;
+fi
 
 # Read members.lst file
 while read line
@@ -158,5 +230,5 @@ do
     create_account "$line"
 done < ./members.lst
 
-echo "User added to system !"
+echo "Users added to system !"
 
