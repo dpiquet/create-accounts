@@ -6,11 +6,9 @@
 #
 ###################################################################
 #
-#  Script ecrit par Damien PIQUET: damien.piquet@iutbeziers.fr || piqudam@gmail.com
+#  Script created by Damien PIQUET: damien.piquet@iutbeziers.fr || piqudam@gmail.com
 #
-#  Ajoute les membres du CRIM listes dans le fichier members.lst et ajoute la cle publique (SSH) contenu dans le fichier <login>.pub
-#  Les utilisateurs ajoutes par ce script ne peuvent se connecter que par cle publique
-#  Attention quand même à la configuration de SSHD ;-)
+#  Add users listed in users.lst and add public key in from <login>.pub in .ssh directory
 #
 
 loginShell="/bin/bash"
@@ -19,41 +17,44 @@ passwdFile='/etc/passwd'
 shadowFile='/etc/shadow'
 groupFile='/etc/group'
 homePath='/home'
-membersFile="./members.lst"
+membersFile="./users.lst"
 
 userID=1000
 groupID=1000
 
+ret_err=1
+ret_ok=0
+
 # check required files exists
 if [ ! -f $passwdFile ]; then	
-    echo "Erreur, $passwdFile n'existe pas ! Abandon..."
+    echo "ERROR, $passwdFile does not exists ! Aborting..."
     exit 1;
 fi
 
 if [ ! -f $shadowFile ]; then
-    echo "Erreur, $shadowFile n'existe pas ! Abandon..."
+    echo "ERROR, $shadowFile does not exists ! Aborting..."
     exit 1;
 fi
 
 if [ ! -f $groupFile ]; then
-    echo "Erreur, $groupFile n'existe pas ! Abandon..."
+    echo "ERROR, $groupFile does not exists ! Aborting..."
     exit 1;
 fi
 
 if [ ! -f $membersFile ]; then
-    echo "Erreur, $membersFile n'existe pas ! Abandon..."
+    echo "ERROR, $membersFile does not exists ! Aborting..."
     exit 1;
 fi
 
 if [ ! -d $homePath ]; then
-    echo "Erreur, le repertoire $homePath n'existe pas ! Abandon..."
+    echo "ERROR, directory $homePath does not exists ! Aborting..."
     exit 1;
 fi
 
 function create_account() {
 
     if [ $# -ne 1 ]; then
-        echo "Erreur d'utilisation de la fonction utilisateur create_account !"
+        echo "ERROR in create_account function usage !"
 	return 1;
     fi
 
@@ -69,7 +70,7 @@ function create_account() {
     # Do not add duplicate users !!
     grep $userName $passwdFile
     if [ $? -eq 0 ]; then
-	echo "Erreur, l'utilisateur $userName existe deja !!! Passage au suivant..."
+	echo "ERROR, user $userName already exists !!! Skipping..."
 	return 1;
     fi
 
@@ -94,7 +95,7 @@ function create_account() {
     # skip creation if group already exists
     grep $userName $groupFile
     if [ $? -eq 0 ]; then
-	echo "Attention ! le groupe $userName existe deja !"
+	echo "Warning ! group $userName already exists !"
     else
 
         # /etc/group entry
@@ -115,38 +116,38 @@ function create_account() {
     # home and .ssh directory
     mkdir $homePath/$userName
     if [ $? -ne 0 ]; then
-	echo "Erreur ! la creation du repertoire utilisateur de $userName a echoue !"
+	echo "ERROR, Could not create $userName home directory !"
 	return 1;
     fi
 
     mkdir $homePath/$userName/.ssh
     if [ $? -ne 0 ]; then
-	echo "Erreur, la creation du repertoire .ssh de l'utilisateur $userName a echoue !"
+	echo "ERROR, Could not create $userName .ssh directory !"
 	return 1;
     fi
 
     cat ./$userName.pub > $homePath/$userName/.ssh/authorized_keys
     if [ $? -ne 0 ]; then
-	echo "Erreur, l'ajout de la cle publique de l'utilisateur $userName a echoue !"
+	echo "ERROR, Could not create authorized_ key file for $userName !"
 	return 1;
     fi
 
     chmod 600 $homePath/$userName/.ssh/authorized_keys
     if [ $? -ne 0 ]; then
-        echo "Attention ! l'application des droits sur la cle publique de l'utilisateur $userName a echoue !";
+        echo "WARNING, could not change $userName's authorized key file permission !";
     fi
 
     chmod 700 $homePath/$userName/.ssh
     if [ $? -ne 0 ]; then
-	echo "Attention ! L'application des droits sur le repertoire .ssh de l'utilisateur $userName a echoue !";
+	echo "WARNING, could not change $userName's .ssh directory permission !";
     fi
 
     chown -R $curUserId:$curGroupId $homePath/$userName
     if [ $? -ne 0 ]; then
-	echo "Attention ! l'operation chown $curUserId:$curGroupId sur le repertoire utilisateur de $userName a echoue !"
+	echo "WARNING, chown operation $curUserId:$curGroupId on $userName home directory failed !"
     fi
 
-    echo "Utilisateur $userName ajoute au systeme"
+    echo "$userName added to system"
     return 0
 
 }
@@ -157,5 +158,5 @@ do
     create_account "$line"
 done < ./members.lst
 
-echo "Ajout des utilisateurs termine !"
+echo "User added to system !"
 
