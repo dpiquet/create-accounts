@@ -1,0 +1,10 @@
+#######################################
+#
+#    Create administrator accounts
+#
+#######################################
+
+This script creates accounts, home and SSH public keys
+
+Usernames must be listed in members.lst file
+SSH public keys must be listed in <login>.pub files
