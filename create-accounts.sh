@@ -26,31 +26,6 @@ groupID=1000
 ret_err=1
 ret_ok=0
 
-# check required files exists
-if [ ! -f $passwdFile ]; then	
-    echo "ERROR, $passwdFile does not exists ! Aborting..."
-    exit $ret_err;
-fi
-
-if [ ! -f $shadowFile ]; then
-    echo "ERROR, $shadowFile does not exists ! Aborting..."
-    exit $ret_err;
-fi
-
-if [ ! -f $groupFile ]; then
-    echo "ERROR, $groupFile does not exists ! Aborting..."
-    exit $ret_err;
-fi
-
-if [ ! -f $membersFile ]; then
-    echo "ERROR, $membersFile does not exists ! Aborting..."
-    exit $ret_err;
-fi
-
-if [ ! -d $homePath ]; then
-    echo "ERROR, directory $homePath does not exists ! Aborting..."
-    exit $ret_err;
-fi
 
 function create_account() {
 
@@ -224,11 +199,38 @@ if [ $? -ne $ret_ok ]; then
     exit $?;
 fi
 
+# Verify required file exists
+if [ ! -f $passwdFile ]; then	
+    echo "ERROR, $passwdFile does not exists ! Aborting..."
+    exit $ret_err;
+fi
+
+if [ ! -f $shadowFile ]; then
+    echo "ERROR, $shadowFile does not exists ! Aborting..."
+    exit $ret_err;
+fi
+
+if [ ! -f $groupFile ]; then
+    echo "ERROR, $groupFile does not exists ! Aborting..."
+    exit $ret_err;
+fi
+
+if [ ! -f $membersFile ]; then
+    echo "ERROR, $membersFile does not exists ! Aborting..."
+    exit $ret_err;
+fi
+
+if [ ! -d $homePath ]; then
+    echo "ERROR, directory $homePath does not exists ! Aborting..."
+    exit $ret_err;
+fi
+
+
 # Read members.lst file
 while read line
 do
     create_account "$line"
-done < ./members.lst
+done < $membersFile
 
 echo "Users added to system !"
 
