@@ -12,20 +12,18 @@
 #
 
 # Default values
-loginShell="/bin/bash"
+export loginShell="/bin/bash"
+export passwdFile='/etc/passwd'
+export shadowFile='/etc/shadow'
+export groupFile='/etc/group'
+export homePath='/home'
+export membersFile="./users.lst"
 
-passwdFile='/etc/passwd'
-shadowFile='/etc/shadow'
-groupFile='/etc/group'
-homePath='/home'
-membersFile="./users.lst"
+export userID=1000
+export groupID=1000
 
-userID=1000
-groupID=1000
-
-ret_err=1
-ret_ok=0
-
+export ret_err=1
+export ret_ok=0
 
 function create_account() {
 
@@ -127,62 +125,6 @@ function create_account() {
     return $ret_ok
 }
 
-function get_arguments() {
-    retVal=0
-
-    while test $# -gt 0; do
-        case "$1" in
-	    -h|--home)
-                shift
-                homePath=$1
-                shift
-		;;
-	    -s|--shadow-file)
-		shift
-                shadowFile=$1
-		shift
-		;;
-	    -g|--group-file)
-                shift
-                groupFile=$1
-		shift
-		;;
-	    -l|--login-shell)
-		shift
-                loginShell=$1
-		shift
-		;;
-	    -p|--passwd-file)
-                shift
-                passwdFile=$1
-		shift
-		;;
-            -f|--user-file)
-                shift
-                membersFile=$1
-                shift
-                ;;
-            -u|--uid)
-                shift
-                userID=$1
-                shift
-                ;;
-            -g|--gid)
-                shift
-                groupID=$1
-                shift
-                ;;
-	    *)
-                show_usage
-                retVal=$invalid_arg
-		break
-		;;
-        esac
-    done
-
-    return $retVal
-}
-
 function show_usage() {
     echo "Usage: ./$0 [-h --home /home] [-s --shadow-file /etc/shadow]"
     echo "[-g --group-file /etc/group] [-l --login-shell /bin/bash]"
@@ -192,12 +134,56 @@ function show_usage() {
     return $ret_ok
 }
 
-# Here starts the script execution
-
-get_arguments
-if [ $? -ne $ret_ok ]; then
-    exit $?;
-fi
+# Retrieve parameters
+while test $# -gt 0; do
+    case "$1" in
+        -h|--home)
+	    shift
+	    homePath=$1
+	    shift
+	    ;;
+        -s|--shadow-file)
+	    shift
+	    shadowFile=$1
+	    shift
+	    ;;
+        -g|--group-file)
+	    shift
+	    groupFile=$1
+	    shift
+	    ;;
+        -l|--login-shell)
+	    shift
+	    loginShell=$1
+	    shift
+	    ;;
+        -p|--passwd-file)
+	    shift
+	    passwdFile=$1
+	    shift
+	    ;;
+        -f|--user-file)
+	    shift
+	    membersFile=$1
+	    shift
+	    ;;
+        -u|--uid)
+	    shift
+	    userID=$1
+	    shift
+	    ;;
+        -g|--gid)
+	    shift
+	    groupID=$1
+	    shift
+	    ;;
+        *)
+            echo "$1 is not a valid parameter"
+	    show_usage
+	    break
+	   ;;
+    esac
+done
 
 # Verify required file exists
 if [ ! -f $passwdFile ]; then	
@@ -225,8 +211,7 @@ if [ ! -d $homePath ]; then
     exit $ret_err;
 fi
 
-
-# Read members.lst file
+# Read users file
 while read line
 do
     create_account "$line"
