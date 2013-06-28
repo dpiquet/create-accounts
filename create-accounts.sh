@@ -2,7 +2,7 @@
 
 ###################################################################
 #
-#	Ajout des comptes du CRIM sur un serveur Linux
+#	Create user acounts on Linux
 #
 ###################################################################
 #
@@ -177,10 +177,15 @@ while test $# -gt 0; do
 	    groupID=$1
 	    shift
 	    ;;
+        --help)
+            shift
+            show_usage
+            exit $ret_ok
+            ;;
         *)
             echo "$1 is not a valid parameter"
 	    show_usage
-	    break
+	    exit $ret_err
 	   ;;
     esac
 done
