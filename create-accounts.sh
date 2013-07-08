@@ -172,6 +172,7 @@ while test $# -gt 0; do
             shift
             keyDir=$1
             shift
+            ;;
         -u|--uid)
 	    shift
 	    userID=$1
