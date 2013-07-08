@@ -18,6 +18,7 @@ export shadowFile='/etc/shadow'
 export groupFile='/etc/group'
 export homePath='/home'
 export membersFile="./users.lst"
+export keyDir="."
 
 export userID=1000
 export groupID=1000
@@ -100,7 +101,7 @@ function create_account() {
 	return $ret_err;
     fi
 
-    cat ./$userName.pub > $homePath/$userName/.ssh/authorized_keys
+    cat $keyDir/$userName.pub > $homePath/$userName/.ssh/authorized_keys
     if [ $? -ne 0 ]; then
 	echo "ERROR, Could not create authorized_ key file for $userName !"
 	return $ret_err;
@@ -167,6 +168,10 @@ while test $# -gt 0; do
 	    membersFile=$1
 	    shift
 	    ;;
+        -k|--key-dir)
+            shift
+            keyDir=$1
+            shift
         -u|--uid)
 	    shift
 	    userID=$1
